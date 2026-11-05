@@ -1,35 +1,49 @@
-import random
-from collections import Counter 
+import random #random shuffles the data for the train/test split. 
+from collections import Counter #Counter counts how often each class appears in a list.
 
-import pandas as pd
-from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
+import pandas as pd #reads car.data and prints tables
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix #calculates accuracy, precision, recall, and F1 score
 
+#literally just a list of the column names in the dataset, so we can refer to them by name instead of index.
 COLUMNS = ["buying", "maint", "doors", "persons", "lug_boot", "safety", "class"]
 TARGET = "class"
-CLASSES = ["unacc", "acc", "good", "vgood"] 
+CLASSES = ["unacc", "acc", "good", "vgood"] #the four possible answers, from worst to best. use this list so the table always prints the classes in the same order, even if some of them don't appear in the dataset.
 
-df = pd.read_csv("car.data", header=None, names=COLUMNS, dtype=str)
+df = pd.read_csv("car.data", header=None, names=COLUMNS, dtype=str) 
+#header=none means first row is data, not column names. 
+#names=columns means use the list of column names we defined above. 
+#dtype=str means treat all columns as strings, even if they look like numbers. Means i can use string comparison instead of numeric comparison.
 
-print(f"Number of cars: {len(df)}")
+print(f"Number of cars: {len(df)}") #shows how many cars are in the dataset.
 print("\nFirst 5 cars:")
-print(df.head())
+print(df.head()) #shows the first 5 rows of the dataset
 
+#the classes are not evenly distributed, so we need to know how many of each class there are. 
+#around 70% are "unacc", around 22% are "acc", around 4% are "good" and "vgood". 
 print("\nClass distribution:")
 print(df[TARGET].value_counts())
 print("\nClass distribution (percentage):")
 print(df[TARGET].value_counts(normalize=True) * 100)
 
+# baseline is basically the mode, the most common class which is "unacc"
 baseline = df[TARGET].value_counts(normalize=True).max()
 print(f"\nBaseline accuracy: {baseline:.2f}")
 
+
+#each rule is a (condition, answer) pair. the first matching rule is used to classify the car. if no rules match, the default answer is used.
+#order matters, so the first rule that matches is used. Rules 1 and 2 are always right, every low-safety car is unacc and every 2-person car is unacc.
+#rule 3 is a bit more complicated, it says that every high-safety car is acc. This is not always true, but it is true often enough to be useful.
+#its kinda common sense, if a car is safe, it is probably at least acceptable. The rules are not perfect, but they are better than the baseline.
 first_three_rules = [
     ({"safety": "low"}, "unacc"),
     ({"persons": "2"}, "unacc"),
     ({"safety": "high"}, "acc")
 ]
 
-DEFAULT = "unacc"
+DEFAULT = "unacc" #when a car matches none of the rules
 
+#loops through the rules and checks if the car matches any of them
+#if it does, return the answer for that rule. if it doesn't match any rules, return the default answer.
 def classify(row):
     for conditions, label in first_three_rules:
         matches = True
@@ -40,6 +54,8 @@ def classify(row):
             return label
     return DEFAULT
 
+#list of dictionaries, one per car. 
+#claculates the accuracy of the 3-rule classifier by comparing the predicted class to the actual class for each car in the dataset.
 rows = df.to_dict(orient="records")
 three_rule_accuracy = sum(classify(r) == r[TARGET] for r in rows) / len(rows)
 
