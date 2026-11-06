@@ -124,17 +124,21 @@ RULES = [
 DEFAULT_CLASS = "unacc" #when a car matches none of the rules
 CLASS_GOALS = ["class=unacc", "class=acc", "class=good", "class=vgood"] #the four possible answers, from worst to best.
 
+#forward chainng is a way to apply rules to a set of facts to infer new facts.
+#passes through the rules repeatedly until no new facts can be inferred.
 def forward_chain(facts, rules):
     known = set(facts)
     changed = True 
     while changed:
         changed = False
         for conditions, conclusion in rules:
-            if conditions <= known and conclusion not in known:
+            if conditions <= known and conclusion not in known: #conditions <= known means all conditions are in known. conclusion not in known means we haven't already inferred this fact and stops infinite loops.
                 known.add(conclusion)
                 changed = True
     return known
 
+#same as forward_chain, but also returns a trace of which rules were applied to infer which facts.
+#it can explain how it got to its conclusion, which is useful for debugging and understanding the rules.
 def forward_chain_trace(facts, rules):
     known, trace= set(facts), []
     changed = True 
@@ -147,3 +151,10 @@ def forward_chain_trace(facts, rules):
                 changed = True
     return known, trace
 
+#predict_forward takes a row of data and a set of rules, and returns the predicted class for that row.
+def predict_forward(row,rules):
+    known = forward_chain(row_to_facts(row), rules)
+    for conditions, conclusion in rules:
+        if conclusion.startswith("class=") and conditions <= known:
+            return conclusion.split("=")[1]
+    return DEFAULT_CLASS
