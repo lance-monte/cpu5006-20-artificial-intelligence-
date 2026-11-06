@@ -124,3 +124,15 @@ RULES = [
 DEFAULT_CLASS = "unacc" #when a car matches none of the rules
 CLASS_GOALS = ["class=unacc", "class=acc", "class=good", "class=vgood"] #the four possible answers, from worst to best.
 
+def forward_chain(facts, rules):
+    known = set(facts)
+    changed = True 
+    while changed:
+        changed = False
+        for conditions, conclusion in rules:
+            if conditions <= known and conclusion not in known:
+                known.add(conclusion)
+                changed = True
+    return known
+
+
