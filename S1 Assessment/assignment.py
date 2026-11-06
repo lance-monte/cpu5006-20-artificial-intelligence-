@@ -158,3 +158,14 @@ def predict_forward(row,rules):
         if conclusion.startswith("class=") and conditions <= known:
             return conclusion.split("=")[1]
     return DEFAULT_CLASS
+
+#backward chaining is a way where it proves a goal by proving that all the conditions for a rule that concludes the goal are true.
+#if a known fact matches the goal, it returns true. if not, it looks for rules that conclude the goal and tries to prove all their conditions.
+def backward_chain(goal, facts, rules):
+    if goal in facts:
+        return True
+    for conditions, conclusion in rules:
+        if conclusion == goal:
+            if all(backward_chain(c, facts, rules) for c in sorted(conditions)):
+                return True
+    return False
