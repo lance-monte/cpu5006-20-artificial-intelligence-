@@ -169,3 +169,18 @@ def backward_chain(goal, facts, rules):
             if all(backward_chain(c, facts, rules) for c in sorted(conditions)):
                 return True
     return False
+
+#prove is the same as backward_chain, but it also prints a trace of which rules were applied to prove which goals.
+def prove(goal, facts, rules, depth=0):
+    indent = "  " * depth
+    if goal in facts:
+        print(f"{indent}{goal}: known fact")
+        return True
+    for conditions, conclusion in rules:
+        if conclusion == goal:
+            print(f"{indent}{goal}: try rule needing {sorted(conditions)}")
+            if all(prove(c, facts, rules, depth +1) for c in sorted(conditions)):
+                print(f"{indent}{goal}: proved")
+                return True
+    print(f"{indent}{goal}: cannot prove")
+    return False
