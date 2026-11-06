@@ -77,3 +77,42 @@ train, test = shuffled[:cut], shuffled[cut:]
 
 print(f"Train rows: {len(train)}, Test rows: {len(test)}")
 print("Test set class counts:", dict(Counter(r[TARGET] for r in test)))
+
+def row_to_facts(row): #turns a car into a set of facts, which is the form the rules use.
+    return {f"{attribute}={value}" for attribute, value in row.items() if attribute != TARGET}
+
+RULES = [
+    ({"buying=vhigh", "maint=vhigh"}, "price=unaffordable"),
+    ({"buying=vhigh", "maint=high"}, "price=unaffordable"),
+    ({"buying=high", "maint=vhigh"}, "price=unaffordable"),
+    ({"buying=med", "maint=low"}, "price=low"),
+    ({"buying=low", "maint=med"}, "price=low"),
+    ({"buying=low", "maint=low"}, "price=low"),
+    ({"buying=med", "maint=med"}, "price=medium"),
+    ({"buying=low", "maint=high"}, "price=medium"),
+    ({"lug_boot=big"}, "comfort=high"),
+    ({"lug_boot=med", "doors=4"}, "comfort=high"),
+    ({"lug_boot=med", "doors=5more"}, "comfort=high"),
+    ({"lug_boot=med", "doors=3", "persons=more"}, "comfort=high"),
+    ({"lug_boot=small"}, "comfort=medium"),
+    ({"lug_boot=med", "doors=2"}, "comfort=medium"),
+    ({"lug_boot=med", "doors=3", "persons=4"}, "comfort=medium"),
+    ({"safety=high", "comfort=high"}, "tech=excellent"),
+    ({"safety=high", "comfort=medium"}, "tech=good"),
+    ({"safety=med", "comfort=high"}, "tech=good"),
+    ({"safety=med", "comfort=medium"}, "tech=acceptable"),
+    ({"safety=low"}, "class=unacc"),
+    ({"persons=2"}, "class=unacc"),
+    ({"persons=more", "doors=2", "lug_boot=small"}, "class=unacc"),
+    ({"price=unaffordable"}, "class=unacc"),
+    ({"tech=excellent", "price=low"}, "class=vgood"),
+    ({"tech=excellent", "price=medium"}, "class=vgood"),
+    ({"tech=good", "price=low"}, "class=good"),
+    ({"tech=excellent"}, "class=acc"),
+    ({"tech=good"}, "class=acc"),
+    ({"tech=acceptable", "price=low"}, "class=acc")
+    ({"tech=acceptable", "price=medium"}, "class=acc"),
+]
+
+DEFAULT_CLASS = "unacc" #when a car matches none of the rules
+CLASS_GOALS = ["class=unacc", "class=acc", "class=good", "class=vgood"] #the four possible answers, from worst to best.
