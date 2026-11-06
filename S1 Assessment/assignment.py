@@ -55,10 +55,25 @@ def classify(row):
     return DEFAULT
 
 #list of dictionaries, one per car. 
-#claculates the accuracy of the 3-rule classifier by comparing the predicted class to the actual class for each car in the dataset.
+#calculates the accuracy of the 3-rule classifier by comparing the predicted class to the actual class for each car in the dataset.
 rows = df.to_dict(orient="records")
 three_rule_accuracy = sum(classify(r) == r[TARGET] for r in rows) / len(rows)
 
 print(f"3-rule accuracy: {three_rule_accuracy:.2f} (baseline: {baseline:.2f})")
 print("Better than baseline, but not perfect")
 
+#Train and test
+#the reason for the test is to see how well the rules generalize to new data. 
+#If the accuracy on the test set is much lower than the accuracy on the training set, it means the rules are overfitting to the training data and not generalizing well.
+
+#car.data is not randomly ordered, so we need to shuffle it before splitting into train and test sets.
+#the seed makes the shuffle the same every run, so the results are reproducible. 
+random.seed(42)
+shuffled = rows[:]
+random.shuffle(shuffled)
+
+cut = int(0.7 * len(shuffled)) #works out 70% of the dataset for train, the rest is for test.
+train, test = shuffled[:cut], shuffled[cut:]
+
+print(f"Train rows: {len(train)}, Test rows: {len(test)}")
+print("Test set class counts:", dict(Counter(r[TARGET] for r in test)))
