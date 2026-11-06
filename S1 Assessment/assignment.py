@@ -135,4 +135,15 @@ def forward_chain(facts, rules):
                 changed = True
     return known
 
+def forward_chain_trace(facts, rules):
+    known, trace= set(facts), []
+    changed = True 
+    while changed:
+        changed = False
+        for conditions, conclusion in rules:
+            if conditions <= known and conclusion not in known:
+                known.add(conclusion)
+                trace.append((sorted(conditions), conclusion))
+                changed = True
+    return known, trace
 
