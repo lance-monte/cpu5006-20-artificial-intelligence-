@@ -122,7 +122,7 @@ RULES = [
 ]
 
 DEFAULT_CLASS = "unacc" #when a car matches none of the rules
-CLASS_GOALS = ["class=unacc", "class=acc", "class=good", "class=vgood"] #the four possible answers, from worst to best.
+CLASS_GOALS = ["class=unacc", "class=vgood", "class=good", "class=acc"] #the four possible answers, from worst to best.
 
 #forward chainng is a way to apply rules to a set of facts to infer new facts.
 #passes through the rules repeatedly until no new facts can be inferred.
