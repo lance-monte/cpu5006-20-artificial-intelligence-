@@ -185,7 +185,7 @@ def prove(goal, facts, rules, depth=0):
     print(f"{indent}{goal}: cannot prove")
     return False
 
-#
+#using backward_chin it classifies the car by proving each of the possible classes in order, and returning the first one that can be proved. if none can be proved, it returns the default class.
 def predict_backward(row, rules):
     row_facts = row_to_facts(row)
     proven = [g for g in CLASS_GOALS if backward_chain(g, row_facts, rules)]
@@ -195,9 +195,22 @@ def predict_backward(row, rules):
 y_true = [r[TARGET] for r in test] #the actual classes for the test set, used to calculate accuracy, precision, recall, and F1 score.
 majority = Counter(r[TARGET] for r in train).most_common(1)[0][0] #the most common class in the train set, used by baseline accuracy.
 
+#This shows each approach paired to its predictions for the test set. The baseline is just the majority class, the first three rules are the simple classifier, and forward and backward chaining are the more complex classifiers.
+#this way all four approaches can be compared on the same test set, and their accuracy, precision, recall, and F1 score can be calculated.
 methods = {
     f"Baseline (always '{majority}')": [majority for r in test],
     "First three rules": [classify(r) for r in test],
     "Forward chaining": [predict_forward(r, RULES) for r in test],
     "Backward chaining": [predict_backward(r, RULES) for r in test]
 }
+
+summary =[]
+for name, y_pred in methods.items():
+    print (f"\n{name}:")
+    accuracy = accuracy_score(y_true, y_pred)
+    print(f"Accuracy: {accuracy:.2f}\n")#
+    print(classification_report(y_true, y_pred, labels=CLASSES, zero_division=0)) #zero_division=0 means if a class is not predicted at all, don't throw an error, just say 0 precision and recall.
+    print("Confusion matrix (rows = actual class, columns = predicted class,")
+    print("both in the order unacc, acc, good, vgood):")
+    print(confusion_matrix(y_true, y_pred, labels=CLASSES))
+    summary.append({"method": name, "test_accuracy": round(accuracy, 3)})
