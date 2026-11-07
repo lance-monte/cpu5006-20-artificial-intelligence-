@@ -184,3 +184,20 @@ def prove(goal, facts, rules, depth=0):
                 return True
     print(f"{indent}{goal}: cannot prove")
     return False
+
+#
+def predict_backward(row, rules):
+    row_facts = row_to_facts(row)
+    proven = [g for g in CLASS_GOALS if backward_chain(g, row_facts, rules)]
+    predicted = proven[0] if proven else "class=" + DEFAULT_CLASS
+    return predicted.split("=")[1]
+
+y_true = [r[TARGET] for r in test] #the actual classes for the test set, used to calculate accuracy, precision, recall, and F1 score.
+majority = Counter(r[TARGET] for r in train).most_common(1)[0][0] #the most common class in the train set, used by baseline accuracy.
+
+methods = {
+    f"Baseline (always '{majority}')": [majority for r in test],
+    "First three rules": [classify(r) for r in test],
+    "Forward chaining": [predict_forward(r, RULES) for r in test],
+    "Backward chaining": [predict_backward(r, RULES) for r in test]
+}
