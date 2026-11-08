@@ -204,7 +204,6 @@ methods = {
     "Backward chaining": [predict_backward(r, RULES) for r in test]
 }
 
-summary =[]
 for name, y_pred in methods.items():
     print (f"\n{name}:")
     accuracy = accuracy_score(y_true, y_pred)
@@ -213,4 +212,15 @@ for name, y_pred in methods.items():
     print("Confusion matrix (rows = actual class, columns = predicted class,")
     print("both in the order unacc, acc, good, vgood):")
     print(confusion_matrix(y_true, y_pred, labels=CLASSES))
-    summary.append({"method": name, "test_accuracy": round(accuracy, 3)})
+
+agree = sum(f == b for f, b in zip(methods["Forward chaining"], methods["Backward chaining"]))
+print(f"\nForward and backward chaining agree on {agree} out of {len(test)} test cases ({agree/len(test):.2%})")
+
+print("\nThree test cars the first three rules got wrong:")
+wrong = [r for r in test if classify(r) != r[TARGET]]
+for r in wrong[:3]:
+    car = {a: v for a, v in r.items() if a != TARGET}
+    print(f"{car} predicted: {classify(r)}, actual: {r[TARGET]}")
+print(f"(The first three rules got {len(wrong)} out of {len(test)} wrong.)")
+print(f"Forward chaining got {sum(p != t for p, t in zip(methods['Forward chaining'], y_true))} out of {len(test)} wrong.")
+
