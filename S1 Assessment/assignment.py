@@ -204,6 +204,7 @@ methods = {
     "Backward chaining": [predict_backward(r, RULES) for r in test]
 }
 
+#this prints out the different methods within "methods" and says its accuracy and f1 score as a confusion matrix
 for name, y_pred in methods.items():
     print (f"\n{name}:")
     accuracy = accuracy_score(y_true, y_pred)
@@ -213,9 +214,14 @@ for name, y_pred in methods.items():
     print("both in the order unacc, acc, good, vgood):")
     print(confusion_matrix(y_true, y_pred, labels=CLASSES))
 
+#tests how many test cars forward and backward chaining gave the same answer for. 
+#checks both methods are consistent, they use same rules and same priority order, so they should always agree; they  only differ in how they reach the answer
 agree = sum(f == b for f, b in zip(methods["Forward chaining"], methods["Backward chaining"]))
 print(f"\nForward and backward chaining agree on {agree} out of {len(test)} test cases ({agree/len(test):.2%})")
 
+#makes a list of the test cars the first three rules got wrong 
+#looking at the mistakes show what the rules are missing, first car is predicted unacc but the actual class is acc because the first three rules dont consider price.
+#this is why the rules section include price rules.
 print("\nThree test cars the first three rules got wrong:")
 wrong = [r for r in test if classify(r) != r[TARGET]]
 for r in wrong[:3]:
@@ -224,9 +230,10 @@ for r in wrong[:3]:
 print(f"(The first three rules got {len(wrong)} out of {len(test)} wrong.)")
 print(f"Forward chaining got {sum(p != t for p, t in zip(methods['Forward chaining'], y_true))} out of {len(test)} wrong.")
 
+#Demo section: shows how each method reaches its answers for a few test cars 
 for number, row in enumerate(test[:5], start=1):
     car = {a: v for a, v in row.items() if a != TARGET}
-    print(f"Car {number}: {car}")
+    print(f"\nCar {number}: {car}")
     print(f"True Class: {row[TARGET]}")
     print("FORWARD CHAINING - rules that fired:")
     known, trace = forward_chain_trace(row_to_facts(car), RULES)
@@ -234,7 +241,7 @@ for number, row in enumerate(test[:5], start=1):
         print(f" {' + '.join(conditions)} -> {conclusion}")
     print(f"Answer: {predict_forward(row, RULES)}")
 
-    print("BACKWARD CHAINING - proof:")
+    print("\nBACKWARD CHAINING - proof:")
     facts = row_to_facts(car)
     for goal in CLASS_GOALS:
         print(f"\nGoal: {goal}")
