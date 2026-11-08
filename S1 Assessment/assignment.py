@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score, classification_report, confusion_mat
 #literally just a list of the column names in the dataset, so we can refer to them by name instead of index.
 COLUMNS = ["buying", "maint", "doors", "persons", "lug_boot", "safety", "class"]
 TARGET = "class"
-CLASSES = ["unacc", "acc", "good", "vgood"] #the four possible answers, from worst to best. use this list so the table always prints the classes in the same order, even if some of them don't appear in the dataset.
+CLASSES = ["unacc", "acc", "good", "vgood"] #the four possible answers, from worst to best. use this list so the table always prints the classes in the same order, even if some of them don't appear in the predictions.
 
 df = pd.read_csv("car.data", header=None, names=COLUMNS, dtype=str) 
 #header=none means first row is data, not column names. 
@@ -108,6 +108,9 @@ RULES = [
     ({"safety=med", "comfort=medium"}, "tech=acceptable"),
 
     #class rules combine price and tech to determine class.
+    #order matters meaning that the first class rule that matches wins
+    #deal-breakers would go first because those cars are always unacceptable
+    #then vgood, good and acc so a car that matches both vgood and acc gets vgood
     ({"safety=low"}, "class=unacc"),
     ({"persons=2"}, "class=unacc"),
     ({"persons=more", "doors=2", "lug_boot=small"}, "class=unacc"),
@@ -122,9 +125,10 @@ RULES = [
 ]
 
 DEFAULT_CLASS = "unacc" #when a car matches none of the rules
-CLASS_GOALS = ["class=unacc", "class=vgood", "class=good", "class=acc"] #the four possible answers, from worst to best.
+CLASS_GOALS = ["class=unacc", "class=vgood", "class=good", "class=acc"] #the priority order.
+#it must match the order of the rules otherwise backward chain and forward chain will get different answers.
 
-#forward chainng is a way to apply rules to a set of facts to infer new facts.
+#forward chaining is a way to apply rules to a set of facts to infer new facts.
 #passes through the rules repeatedly until no new facts can be inferred.
 def forward_chain(facts, rules):
     known = set(facts)
@@ -152,6 +156,7 @@ def forward_chain_trace(facts, rules):
     return known, trace
 
 #predict_forward takes a row of data and a set of rules, and returns the predicted class for that row.
+#forward chaining can find more than one class and this function picks the first matching class rule.
 def predict_forward(row,rules):
     known = forward_chain(row_to_facts(row), rules)
     for conditions, conclusion in rules:
@@ -160,6 +165,7 @@ def predict_forward(row,rules):
     return DEFAULT_CLASS
 
 #backward chaining is a way where it proves a goal by proving that all the conditions for a rule that concludes the goal are true.
+#each condition then becomes a sub-goal so that the function calls itself which is recursion
 #if a known fact matches the goal, it returns true. if not, it looks for rules that conclude the goal and tries to prove all their conditions.
 def backward_chain(goal, facts, rules):
     if goal in facts:
@@ -185,7 +191,7 @@ def prove(goal, facts, rules, depth=0):
     print(f"{indent}{goal}: cannot prove")
     return False
 
-#using backward_chin it classifies the car by proving each of the possible classes in order, and returning the first one that can be proved. if none can be proved, it returns the default class.
+#using backward_chain it classifies the car by proving each of the possible classes in order, and returning the first one that can be proved. if none can be proved, it returns the default class.
 def predict_backward(row, rules):
     row_facts = row_to_facts(row)
     proven = [g for g in CLASS_GOALS if backward_chain(g, row_facts, rules)]
@@ -204,11 +210,12 @@ methods = {
     "Backward chaining": [predict_backward(r, RULES) for r in test]
 }
 
-#this prints out the different methods within "methods" and says its accuracy and f1 score as a confusion matrix
+#this prints out the different methods within "methods".
+#it prints the accuracy, precision, recall, f1 score(for each class) and a confusion matrix. 
 for name, y_pred in methods.items():
     print (f"\n{name}:")
     accuracy = accuracy_score(y_true, y_pred)
-    print(f"Accuracy: {accuracy:.2f}\n")#
+    print(f"Accuracy: {accuracy:.2f}\n")
     print(classification_report(y_true, y_pred, labels=CLASSES, zero_division=0)) #zero_division=0 means if a class is not predicted at all, don't throw an error, just say 0 precision and recall.
     print("Confusion matrix (rows = actual class, columns = predicted class,")
     print("both in the order unacc, acc, good, vgood):")
@@ -220,7 +227,7 @@ agree = sum(f == b for f, b in zip(methods["Forward chaining"], methods["Backwar
 print(f"\nForward and backward chaining agree on {agree} out of {len(test)} test cases ({agree/len(test):.2%})")
 
 #makes a list of the test cars the first three rules got wrong 
-#looking at the mistakes show what the rules are missing, first car is predicted unacc but the actual class is acc because the first three rules dont consider price.
+#looking at the mistakes show what the rules are missing, the first car printed on code line 229 is predicted unacc but the actual class is acc because the first three rules dont consider price.
 #this is why the rules section include price rules.
 print("\nThree test cars the first three rules got wrong:")
 wrong = [r for r in test if classify(r) != r[TARGET]]
