@@ -224,3 +224,20 @@ for r in wrong[:3]:
 print(f"(The first three rules got {len(wrong)} out of {len(test)} wrong.)")
 print(f"Forward chaining got {sum(p != t for p, t in zip(methods['Forward chaining'], y_true))} out of {len(test)} wrong.")
 
+for number, row in enumerate(test[:5], start=1):
+    car = {a: v for a, v in row.items() if a != TARGET}
+    print(f"Car {number}: {car}")
+    print(f"True Class: {row[TARGET]}")
+    print("FORWARD CHAINING - rules that fired:")
+    known, trace = forward_chain_trace(row_to_facts(car), RULES)
+    for conditions, conclusion in trace:
+        print(f" {' + '.join(conditions)} -> {conclusion}")
+    print(f"Answer: {predict_forward(row, RULES)}")
+
+    print("BACKWARD CHAINING - proof:")
+    facts = row_to_facts(car)
+    for goal in CLASS_GOALS:
+        print(f"\nGoal: {goal}")
+        if prove(goal, facts, RULES):
+            break
+    print(f"\nAnswer: {predict_backward(car, RULES)}")
