@@ -227,7 +227,7 @@ agree = sum(f == b for f, b in zip(methods["Forward chaining"], methods["Backwar
 print(f"\nForward and backward chaining agree on {agree} out of {len(test)} test cases ({agree/len(test):.2%})")
 
 #makes a list of the test cars the first three rules got wrong 
-#looking at the mistakes show what the rules are missing, the first car printed on code line 229 is predicted unacc but the actual class is acc because the first three rules dont consider price.
+#looking at the mistakes show what the rules are missing, the first car printed on code line 236 is predicted unacc but the actual class is good because the first three rules dont consider price.
 #this is why the rules section include price rules.
 print("\nThree test cars the first three rules got wrong:")
 wrong = [r for r in test if classify(r) != r[TARGET]]
